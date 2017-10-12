@@ -102,16 +102,13 @@ ble_mpu_t m_mpu;
 APP_TIMER_DEF(m_mpu_send_timer_id);
 #define TICKS_MPU_SAMPLING_INTERVAL APP_TIMER_TICKS(32)
 #endif
+
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
 #include "nrf_drv_saadc.h"
 #define SAMPLES_IN_BUFFER 4
 //volatile uint8_t state = 1;
 #define SAADC_BURST_MODE 1 //Set to 1 to enable BURST mode, otherwise set to 0.
-
-//static const nrf_drv_timer_t m_timer = NRF_DRV_TIMER_INSTANCE(0);
-//static nrf_saadc_value_t m_buffer_pool[2][SAMPLES_IN_BUFFER];
 static nrf_saadc_value_t m_buffer_pool[SAMPLES_IN_BUFFER];
-//static nrf_ppi_channel_t     m_ppi_channel;
 static uint32_t m_adc_evt_counter;
 #endif
 
@@ -127,6 +124,7 @@ static ble_bas_t m_bas;                                    /**< Structure used t
 APP_TIMER_DEF(m_sampling_timer_id);
 static uint16_t m_samples;
 #endif
+
 #define APP_FEATURE_NOT_SUPPORTED BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2 /**< Reply when unsupported features are requested. */
 
 #define DEVICE_NAME "nRF52-2CH-ECG"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
@@ -221,7 +219,7 @@ static void mpu_send_timeout_handler(void *p_context) {
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
 
 static void battery_level_update(void) {
-  ret_code_t err_code;
+//  ret_code_t err_code;
 //TODO: CALL SAADC
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
   //Enable load switch:
@@ -491,9 +489,9 @@ static void on_ble_evt(ble_evt_t *p_ble_evt) {
     advertising_start();
     break; // BLE_GAP_EVT_DISCONNECTED
   case BLE_GAP_EVT_CONNECTED:
-    ads_spi_uninit();
     battery_level_update();
-    ads_spi_init_with_sample_freq(SPI_SCLK_SAMPLING
+    ads_spi_uninit();
+    ads_spi_init_with_sample_freq(SPI_SCLK_SAMPLING);
     ads1291_2_wake();
 #if LEDS_ENABLE == 1
     nrf_gpio_pin_set(LED_2);
