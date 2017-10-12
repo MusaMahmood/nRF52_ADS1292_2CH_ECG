@@ -103,11 +103,20 @@ APP_TIMER_DEF(m_mpu_send_timer_id);
 #define TICKS_MPU_SAMPLING_INTERVAL APP_TIMER_TICKS(32)
 #endif
 
+#if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
+#include "nrf_drv_saadc.h"
+#define SAMPLES_IN_BUFFER 4
+//volatile uint8_t state = 1;
+#define SAADC_BURST_MODE 1 //Set to 1 to enable BURST mode, otherwise set to 0.
+static nrf_saadc_value_t m_buffer_pool[SAMPLES_IN_BUFFER];
+static uint32_t m_adc_evt_counter;
+#endif
+
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
 #include "ble_bas.h"
-#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(2000) /**< Battery level measurement interval (ticks). */
-APP_TIMER_DEF(m_battery_timer_id);                        /**< Battery timer. */
-static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
+#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(5000) /**< Battery level measurement interval (ticks). */
+APP_TIMER_DEF(m_battery_timer_id);                         /**< Battery timer. */
+static ble_bas_t m_bas;                                    /**< Structure used to identify the battery service. */
 #endif
 
 #if defined(APP_TIMER_SAMPLING) && APP_TIMER_SAMPLING == 1
@@ -115,6 +124,7 @@ static ble_bas_t m_bas;                                   /**< Structure used to
 APP_TIMER_DEF(m_sampling_timer_id);
 static uint16_t m_samples;
 #endif
+
 #define APP_FEATURE_NOT_SUPPORTED BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2 /**< Reply when unsupported features are requested. */
 
 #define DEVICE_NAME "nRF52-2CH-ECG"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
@@ -207,20 +217,18 @@ static void mpu_send_timeout_handler(void *p_context) {
 #endif /**@(defined(MPU60x0) || defined(MPU9150) || defined(MPU9255))*/
 
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
+
 static void battery_level_update(void) {
-  ret_code_t err_code;
-  uint8_t battery_level;
-
-  battery_level = (uint8_t)0x08;
-
-  err_code = ble_bas_battery_level_update(&m_bas, battery_level);
-  if ((err_code != NRF_SUCCESS) &&
-      (err_code != NRF_ERROR_INVALID_STATE) &&
-      (err_code != NRF_ERROR_RESOURCES) &&
-      (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)) {
-    APP_ERROR_HANDLER(err_code);
-  }
+//  ret_code_t err_code;
+//TODO: CALL SAADC
+#if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
+  //Enable load switch:
+  nrf_gpio_pin_clear(BATTERY_LOAD_SWITCH_CTRL_PIN);
+  //Sample with ADC
+  nrf_drv_saadc_sample();
+#endif
 }
+
 static void battery_level_meas_timeout_handler(void *p_context) {
   UNUSED_PARAMETER(p_context);
   battery_level_update();
@@ -334,12 +342,12 @@ static void services_init(void) {
   bas_init.evt_handler = NULL;
   bas_init.support_notification = true;
   bas_init.p_report_ref = NULL;
-  bas_init.initial_batt_level = 100;
+  bas_init.batt_level = 0x64;
 
   err_code = ble_bas_init(&m_bas, &bas_init);
   APP_ERROR_CHECK(err_code);
 #endif
-  
+
   ble_dis_init_t dis_init;
   memset(&dis_init, 0, sizeof(dis_init));
   ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, (char *)MANUFACTURER_NAME);
@@ -481,6 +489,7 @@ static void on_ble_evt(ble_evt_t *p_ble_evt) {
     advertising_start();
     break; // BLE_GAP_EVT_DISCONNECTED
   case BLE_GAP_EVT_CONNECTED:
+    battery_level_update();
     ads_spi_uninit();
     ads_spi_init_with_sample_freq(SPI_SCLK_SAMPLING);
     ads1291_2_wake();
@@ -743,6 +752,66 @@ void mpu_setup(void) {
 //*/
 #endif
 
+#if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
+
+void saadc_callback(nrf_drv_saadc_evt_t const *p_event) {
+  if (p_event->type == NRF_DRV_SAADC_EVT_DONE) {
+    ret_code_t err_code;
+    uint8_t battery_level = 0;
+    err_code = nrf_drv_saadc_buffer_convert(p_event->data.done.p_buffer, SAMPLES_IN_BUFFER);
+    APP_ERROR_CHECK(err_code);
+
+    int i;
+    NRF_LOG_INFO("ADC event number: %d\r\n", (int)m_adc_evt_counter);
+
+    for (i = 0; i < SAMPLES_IN_BUFFER; i++) {
+      NRF_LOG_INFO("%d\r\n", p_event->data.done.p_buffer[i]);
+    }
+    m_bas.battery_level = p_event->data.done.p_buffer[3];
+    err_code = ble_bas_battery_level_update(&m_bas);
+    if ((err_code != NRF_SUCCESS) &&
+        (err_code != NRF_ERROR_INVALID_STATE) &&
+        (err_code != NRF_ERROR_RESOURCES) &&
+        (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)) {
+      APP_ERROR_HANDLER(err_code);
+    }
+    m_adc_evt_counter++;
+    nrf_gpio_pin_set(BATTERY_LOAD_SWITCH_CTRL_PIN); //LOAD SWITCH OFF
+  }
+}
+
+void saadc_init(void) {
+
+  ret_code_t err_code;
+  nrf_drv_saadc_config_t saadc_config;
+  //Configure SAADC
+  saadc_config.low_power_mode = true;                     //Enable low power mode.
+  saadc_config.resolution = NRF_SAADC_RESOLUTION_12BIT;   //Set SAADC resolution to 12-bit. This will make the SAADC output values from 0 (when input voltage is 0V) to 2^12=2048 (when input voltage is 3.6V for channel gain setting of 1/6).
+  saadc_config.oversample = NRF_SAADC_OVERSAMPLE_4X;      //Set oversample to 4x. This will make the SAADC output a single averaged value when the SAMPLE task is triggered 4 times.
+  saadc_config.interrupt_priority = APP_IRQ_PRIORITY_LOW; //Set SAADC interrupt to low priority.
+
+  nrf_saadc_channel_config_t channel_config =
+      NRF_DRV_SAADC_DEFAULT_CHANNEL_CONFIG_SE(NRF_SAADC_INPUT_AIN3);
+
+  err_code = nrf_drv_saadc_init(&saadc_config, saadc_callback);
+  APP_ERROR_CHECK(err_code);
+
+  err_code = nrf_drv_saadc_channel_init(0, &channel_config);
+  APP_ERROR_CHECK(err_code);
+
+  if (SAADC_BURST_MODE) {
+    NRF_SAADC->CH[0].CONFIG |= 0x01000000; //Configure burst mode for channel 0. Burst is useful together with oversampling. When triggering the SAMPLE task in burst mode, the SAADC will sample "Oversample" number of times as fast as it can and then output a single averaged value to the RAM buffer. If burst mode is not enabled, the SAMPLE task needs to be triggered "Oversample" number of times to output a single averaged value to the RAM buffer.
+  }
+
+  err_code = nrf_drv_saadc_buffer_convert(&m_buffer_pool[0], SAMPLES_IN_BUFFER);
+  APP_ERROR_CHECK(err_code);
+
+  //  err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1], SAMPLES_IN_BUFFER);
+  //  APP_ERROR_CHECK(err_code);
+
+}
+#endif
+
 void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
   UNUSED_PARAMETER(pin);
   UNUSED_PARAMETER(action);
@@ -759,15 +828,6 @@ void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
 }
 
 static void ads1299_gpio_init(void) {
-#if defined(BOARD_PCA10040) && LEDS_ENABLE == 1
-  nrf_gpio_cfg_output(LED_1);
-  nrf_gpio_cfg_output(LED_2);
-  nrf_gpio_cfg_output(LED_3);
-  nrf_gpio_cfg_output(LED_4);
-  nrf_gpio_pin_set(LED_3);
-  nrf_gpio_pin_set(LED_4);
-#endif
-
 #if defined(BOARD_NRF_BREAKOUT) | defined(BOARD_PCA10028) | defined(BOARD_PCA10040) | defined(BOARD_2CH_ECG_RAT)
   nrf_gpio_pin_dir_set(ADS1291_2_DRDY_PIN, NRF_GPIO_PIN_DIR_INPUT); //sets 'direction' = input/output
   nrf_gpio_pin_dir_set(ADS1291_2_PWDN_PIN, NRF_GPIO_PIN_DIR_OUTPUT);
@@ -780,7 +840,7 @@ static void ads1299_gpio_init(void) {
 #endif
 #ifdef BATTERY_LOAD_SWITCH_CTRL_PIN
   nrf_gpio_cfg_output(BATTERY_LOAD_SWITCH_CTRL_PIN);
-  nrf_gpio_pin_set(BATTERY_LOAD_SWITCH_CTRL_PIN);
+  nrf_gpio_pin_set(BATTERY_LOAD_SWITCH_CTRL_PIN); //OFF
 #endif
   uint32_t err_code;
   if (!nrf_drv_gpiote_is_init()) {
@@ -822,11 +882,11 @@ int main(void) {
 #if defined(ADS1292)
   //SPI STUFF FOR ADS:
 
-  ads_spi_init_with_sample_freq(SPI_SCLK_WRITE_REG);
-  nrf_delay_ms(5);
   // Stop continuous data conversion and initialize registers to default values
   ads1291_2_powerdn();
   ads1291_2_powerup();
+  ads_spi_init_with_sample_freq(SPI_SCLK_WRITE_REG);
+  nrf_delay_ms(5);
   ads1291_2_stop_rdatac();
 
   ads1291_2_init_regs();
@@ -841,9 +901,15 @@ int main(void) {
   nrf_delay_ms(10);
   m_eeg.eeg_ch1_count = 0;
 #endif
+
 #if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
   mpu_setup();
 #endif
+
+#if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
+  saadc_init();
+#endif
+
   // Start execution.
   application_timers_start();
   advertising_start();
@@ -858,10 +924,8 @@ int main(void) {
 #endif
 // Enter main loop
 #if NRF_LOG_ENABLED == 1
-  for (;;) {
-    if (!NRF_LOG_PROCESS()) {
-      wait_for_event();
-    }
+  while (1) {
+    NRF_LOG_FLUSH();
   }
 #endif
 }

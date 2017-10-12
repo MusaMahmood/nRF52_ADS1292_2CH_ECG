@@ -626,6 +626,7 @@ void ads1291_2_check_id(void);
 /**@DATA RETRIEVAL FUNCTIONS****/
 
 void set_sampling_rate(uint8_t sampling_rate);
+
 void get_eeg_voltage_array_2ch(ble_eeg_t *p_eeg);
 
 void ads_spi_uninit(void);
