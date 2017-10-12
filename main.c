@@ -117,9 +117,9 @@ static uint32_t m_adc_evt_counter;
 
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
 #include "ble_bas.h"
-#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(10000) /**< Battery level measurement interval (ticks). */
-APP_TIMER_DEF(m_battery_timer_id);                        /**< Battery timer. */
-static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
+#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(5000) /**< Battery level measurement interval (ticks). */
+APP_TIMER_DEF(m_battery_timer_id);                         /**< Battery timer. */
+static ble_bas_t m_bas;                                    /**< Structure used to identify the battery service. */
 #endif
 
 #if defined(APP_TIMER_SAMPLING) && APP_TIMER_SAMPLING == 1
@@ -222,15 +222,12 @@ static void mpu_send_timeout_handler(void *p_context) {
 
 static void battery_level_update(void) {
   ret_code_t err_code;
-//  uint8_t battery_level = (uint8_t)0x08;
 //TODO: CALL SAADC
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
   //Enable load switch:
   nrf_gpio_pin_clear(BATTERY_LOAD_SWITCH_CTRL_PIN);
   //Sample with ADC
   nrf_drv_saadc_sample();
-//  err_code = nrf_drv_saadc_sample();
-//  APP_ERROR_HANDLER(err_code);
 #endif
 }
 
@@ -495,7 +492,8 @@ static void on_ble_evt(ble_evt_t *p_ble_evt) {
     break; // BLE_GAP_EVT_DISCONNECTED
   case BLE_GAP_EVT_CONNECTED:
     ads_spi_uninit();
-    ads_spi_init_with_sample_freq(SPI_SCLK_SAMPLING);
+    battery_level_update();
+    ads_spi_init_with_sample_freq(SPI_SCLK_SAMPLING
     ads1291_2_wake();
 #if LEDS_ENABLE == 1
     nrf_gpio_pin_set(LED_2);
@@ -812,6 +810,7 @@ void saadc_init(void) {
 
   //  err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1], SAMPLES_IN_BUFFER);
   //  APP_ERROR_CHECK(err_code);
+
 }
 #endif
 
@@ -885,11 +884,11 @@ int main(void) {
 #if defined(ADS1292)
   //SPI STUFF FOR ADS:
 
-  ads_spi_init_with_sample_freq(SPI_SCLK_WRITE_REG);
-  nrf_delay_ms(5);
   // Stop continuous data conversion and initialize registers to default values
   ads1291_2_powerdn();
   ads1291_2_powerup();
+  ads_spi_init_with_sample_freq(SPI_SCLK_WRITE_REG);
+  nrf_delay_ms(5);
   ads1291_2_stop_rdatac();
 
   ads1291_2_init_regs();
@@ -904,12 +903,15 @@ int main(void) {
   nrf_delay_ms(10);
   m_eeg.eeg_ch1_count = 0;
 #endif
-#if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
-  saadc_init();
-#endif
+
 #if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
   mpu_setup();
 #endif
+
+#if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
+  saadc_init();
+#endif
+
   // Start execution.
   application_timers_start();
   advertising_start();
