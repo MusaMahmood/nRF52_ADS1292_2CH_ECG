@@ -117,7 +117,7 @@ static uint32_t m_adc_evt_counter;
 
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
 #include "ble_bas.h"
-#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(2000) /**< Battery level measurement interval (ticks). */
+#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(10000) /**< Battery level measurement interval (ticks). */
 APP_TIMER_DEF(m_battery_timer_id);                        /**< Battery timer. */
 static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
 #endif
@@ -924,11 +924,6 @@ int main(void) {
 #endif
 // Enter main loop
 #if NRF_LOG_ENABLED == 1
-  //  for (;;) {
-  //    if (!NRF_LOG_PROCESS()) {
-  //      wait_for_event();
-  //    }
-  //  }
   while (1) {
     NRF_LOG_FLUSH();
   }

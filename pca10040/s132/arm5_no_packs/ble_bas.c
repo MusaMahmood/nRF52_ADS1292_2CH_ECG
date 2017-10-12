@@ -286,10 +286,9 @@ uint32_t ble_bas_battery_level_update(ble_bas_t * p_bas)
     if (p_bas->battery_level != p_bas->battery_level_last) {
         // Initialize value struct.
         memset(&gatts_value, 0, sizeof(gatts_value));
-
         gatts_value.len     = sizeof(uint16_t);
         gatts_value.offset  = 0;
-        gatts_value.p_value = &p_bas->battery_level;
+        gatts_value.p_value = (uint8_t *) &p_bas->battery_level; //cast 16-bit int to pointer for gatt
 
         // Update database.
         err_code = sd_ble_gatts_value_set(p_bas->conn_handle,
