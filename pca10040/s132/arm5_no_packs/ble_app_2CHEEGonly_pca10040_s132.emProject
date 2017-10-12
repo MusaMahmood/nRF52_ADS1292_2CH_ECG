@@ -120,6 +120,9 @@
     <folder Name="System Files">
       <file file_name="flash_placement.xml" />
     </folder>
+    <folder Name="nRF_BLE_Services">
+      <file file_name="../../../../../../components/ble/ble_services/ble_bas/ble_bas.c" />
+    </folder>
   </project>
   <configuration Name="Internal" hidden="Yes" />
   <configuration Name="nrf52832_xxaa" inherited_configurations="Internal" />

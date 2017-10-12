@@ -103,6 +103,13 @@ APP_TIMER_DEF(m_mpu_send_timer_id);
 #define TICKS_MPU_SAMPLING_INTERVAL APP_TIMER_TICKS(32)
 #endif
 
+#if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
+#include "ble_bas.h"
+#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(2000) /**< Battery level measurement interval (ticks). */
+APP_TIMER_DEF(m_battery_timer_id);                        /**< Battery timer. */
+static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
+#endif
+
 #if defined(APP_TIMER_SAMPLING) && APP_TIMER_SAMPLING == 1
 #define TICKS_SAMPLING_INTERVAL APP_TIMER_TICKS(1000)
 APP_TIMER_DEF(m_sampling_timer_id);
@@ -154,6 +161,9 @@ static ble_uuid_t m_adv_uuids[] =
 #if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
         {BLE_UUID_MPU_SERVICE_UUID, BLE_UUID_TYPE_BLE},
 #endif
+#if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
+        {BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},
+#endif
         {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}}; /**< Universally unique service identifiers. */
 
 static void advertising_start(void);
@@ -196,6 +206,27 @@ static void mpu_send_timeout_handler(void *p_context) {
 }
 #endif /**@(defined(MPU60x0) || defined(MPU9150) || defined(MPU9255))*/
 
+#if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
+static void battery_level_update(void) {
+  ret_code_t err_code;
+  uint8_t battery_level;
+
+  battery_level = (uint8_t)0x08;
+
+  err_code = ble_bas_battery_level_update(&m_bas, battery_level);
+  if ((err_code != NRF_SUCCESS) &&
+      (err_code != NRF_ERROR_INVALID_STATE) &&
+      (err_code != NRF_ERROR_RESOURCES) &&
+      (err_code != BLE_ERROR_GATTS_SYS_ATTR_MISSING)) {
+    APP_ERROR_HANDLER(err_code);
+  }
+}
+static void battery_level_meas_timeout_handler(void *p_context) {
+  UNUSED_PARAMETER(p_context);
+  battery_level_update();
+}
+#endif
+
 /**@brief Function for the Timer initialization.
  *
  * @details Initializes the timer module. This creates and starts application timers.
@@ -212,6 +243,13 @@ static void timers_init(void) {
 
 #if defined(APP_TIMER_SAMPLING) && APP_TIMER_SAMPLING == 1
   err_code = app_timer_create(&m_sampling_timer_id, APP_TIMER_MODE_REPEATED, m_sampling_timeout_handler);
+  APP_ERROR_CHECK(err_code);
+#endif
+
+#if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
+  err_code = app_timer_create(&m_battery_timer_id,
+      APP_TIMER_MODE_REPEATED,
+      battery_level_meas_timeout_handler);
   APP_ERROR_CHECK(err_code);
 #endif
 }
@@ -274,12 +312,34 @@ static void gatt_init(void) {
 /**@brief Function for initializing services that will be used by the application.
  */
 static void services_init(void) {
+  uint32_t err_code;
   ble_eeg_service_init(&m_eeg);
-  /**@Device Information Service:*/
+/**@Device Information Service:*/
 #if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
   ble_mpu_service_init(&m_mpu);
 #endif
-  uint32_t err_code;
+
+#if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
+  ble_bas_init_t bas_init;
+  // Initialize Battery Service.
+  memset(&bas_init, 0, sizeof(bas_init));
+
+  // Here the sec level for the Battery Service can be changed/increased.
+  BLE_GAP_CONN_SEC_MODE_SET_OPEN(&bas_init.battery_level_char_attr_md.cccd_write_perm);
+  BLE_GAP_CONN_SEC_MODE_SET_OPEN(&bas_init.battery_level_char_attr_md.read_perm);
+  BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&bas_init.battery_level_char_attr_md.write_perm);
+
+  BLE_GAP_CONN_SEC_MODE_SET_OPEN(&bas_init.battery_level_report_read_perm);
+
+  bas_init.evt_handler = NULL;
+  bas_init.support_notification = true;
+  bas_init.p_report_ref = NULL;
+  bas_init.initial_batt_level = 100;
+
+  err_code = ble_bas_init(&m_bas, &bas_init);
+  APP_ERROR_CHECK(err_code);
+#endif
+  
   ble_dis_init_t dis_init;
   memset(&dis_init, 0, sizeof(dis_init));
   ble_srv_ascii_to_utf8(&dis_init.manufact_name_str, (char *)MANUFACTURER_NAME);
@@ -356,6 +416,11 @@ static void application_timers_start(void) {
   err_code = app_timer_start(m_mpu_send_timer_id, TICKS_MPU_SAMPLING_INTERVAL, NULL);
   APP_ERROR_CHECK(err_code);
 #endif
+
+#if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
+  err_code = app_timer_start(m_battery_timer_id, BATTERY_LEVEL_MEAS_INTERVAL, NULL);
+  APP_ERROR_CHECK(err_code);
+#endif
 }
 
 /**@brief Function for putting the chip into sleep mode.
@@ -404,14 +469,10 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
  */
 static void on_ble_evt(ble_evt_t *p_ble_evt) {
   ret_code_t err_code = NRF_SUCCESS;
-
   switch (p_ble_evt->header.evt_id) {
   case BLE_GAP_EVT_DISCONNECTED:
     NRF_LOG_INFO("Disconnected.\r\n");
     m_connected = false;
-#if defined(ADS1299)
-    ads1299_standby();
-#endif
     ads1291_2_standby();
 #if LEDS_ENABLE == 1
     nrf_gpio_pin_clear(LED_2); // Green
@@ -419,7 +480,6 @@ static void on_ble_evt(ble_evt_t *p_ble_evt) {
 #endif
     advertising_start();
     break; // BLE_GAP_EVT_DISCONNECTED
-
   case BLE_GAP_EVT_CONNECTED:
     ads_spi_uninit();
     ads_spi_init_with_sample_freq(SPI_SCLK_SAMPLING);
@@ -500,7 +560,9 @@ static void ble_evt_dispatch(ble_evt_t *p_ble_evt) {
   on_ble_evt(p_ble_evt);
   ble_advertising_on_ble_evt(p_ble_evt);
   nrf_ble_gatt_on_ble_evt(&m_gatt, p_ble_evt);
-
+#if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
+  ble_bas_on_ble_evt(&m_bas, p_ble_evt);
+#endif
   ble_eeg_on_ble_evt(&m_eeg, p_ble_evt);
 #if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
   ble_mpu_on_ble_evt(&m_mpu, p_ble_evt);
