@@ -2152,7 +2152,7 @@
  
 
 #ifndef SPI0_USE_EASY_DMA
-#define SPI0_USE_EASY_DMA 0
+#define SPI0_USE_EASY_DMA 1
 #endif
 
 // <o> SPI0_DEFAULT_FREQUENCY  - SPI frequency
@@ -3716,7 +3716,7 @@
 // <e> NRF_LOG_ENABLED - nrf_log - Logging
 //==========================================================
 #ifndef NRF_LOG_ENABLED
-#define NRF_LOG_ENABLED 1 //Check NRF_LOG_BACKEND.. .RTT
+#define NRF_LOG_ENABLED 0 //Check NRF_LOG_BACKEND.. .RTT
 #endif
 #if NRF_LOG_ENABLED
 // <e> NRF_LOG_USES_COLORS - If enabled then ANSI escape code for colors is prefixed to every string

@@ -68,7 +68,7 @@ void ads_spi_init(void) {
   nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
   spi_config.bit_order = NRF_DRV_SPI_BIT_ORDER_MSB_FIRST;
   //SCLK = 1MHz is right speed because fCLK = (1/2)*SCLK, and fMOD = fCLK/4, and fMOD MUST BE 128kHz. Do the math.
-  spi_config.frequency = NRF_DRV_SPI_FREQ_4M;
+  spi_config.frequency = NRF_DRV_SPI_FREQ_1M;
   spi_config.irq_priority = APP_IRQ_PRIORITY_HIGHEST; //APP_IRQ_PRIORITY_HIGHEST;
   spi_config.mode = NRF_DRV_SPI_MODE_1;               //CPOL = 0 (Active High); CPHA = TRAILING (1)
   spi_config.miso_pin = ADS1291_2_MISO_PIN;
@@ -87,6 +87,12 @@ void ads_spi_uninit(void) {
 void ads_spi_init_with_sample_freq(uint8_t spi_sclk) {
   nrf_drv_spi_config_t spi_config = NRF_DRV_SPI_DEFAULT_CONFIG;
   switch (spi_sclk) {
+  case 0:
+    spi_config.frequency = NRF_DRV_SPI_FREQ_500K;
+    break;
+  case 1:
+    spi_config.frequency = NRF_DRV_SPI_FREQ_1M;
+    break;
   case 2:
     spi_config.frequency = NRF_DRV_SPI_FREQ_2M;
     break;
@@ -270,13 +276,13 @@ void ads1291_2_check_id(void) {
 #endif
   uint8_t device_id_reg_value;
   uint8_t tx_data_spi[3];
-  uint8_t rx_data_spi[7];
+  uint8_t rx_data_spi[6];
   //  memset(rx_data_spi, 0, 7);
   tx_data_spi[0] = 0x20; // First command byte = 001r rrrr (r rrrr = register start address)
-  tx_data_spi[1] = 0x00; // Intend to read 1 byte: (Bytes to read)-1 = 0
+  tx_data_spi[1] = 0x01; // Intend to read 1 byte: (Bytes to read)-1 = 0
   tx_data_spi[2] = 0x00; //This will be replaced by Reg Data
   spi_xfer_done = false;
-  APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, tx_data_spi, 3, rx_data_spi, 7));
+  APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, tx_data_spi, 2, rx_data_spi, 6));
   while (!spi_xfer_done) {
     __WFE();
   }
@@ -309,4 +315,20 @@ void get_eeg_voltage_array_2ch(ble_eeg_t *p_eeg) {
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[7];
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[8];
   //  }
+}
+
+void get_eeg_voltage_array_2ch_low_resolution(ble_eeg_t *p_eeg) {
+  memset(rx_data, 0, RX_DATA_LEN);
+  spi_xfer_done = false;
+  APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, NULL, 0, rx_data, 8));
+  while (!spi_xfer_done)
+    __WFE();
+  if (rx_data[0] == 0xC0) {
+    p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count] = rx_data[3];
+    p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[4];
+    //  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 2] = rx_data[5];
+    p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[6];
+    p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[7];
+    //  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[8];
+  }
 }

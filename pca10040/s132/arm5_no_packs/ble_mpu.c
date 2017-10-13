@@ -10,10 +10,6 @@
 #include "nrf_gpio.h"
 #include <stdint.h>
 #include <string.h>
-/**@Needed for 'updates'*/
-#if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9255) || defined(MPU9250))
-//#include "mpu.h"
-#endif /**@(defined(MPU60x0) || defined(MPU9150) || defined(MPU9255))*/
 
 void ble_mpu_on_ble_evt(ble_mpu_t *p_mpu, ble_evt_t *p_ble_evt) {
   switch (p_ble_evt->header.evt_id) {
@@ -92,23 +88,6 @@ void ble_mpu_service_init(ble_mpu_t *p_mpu) {
   ble_char_combined_add(p_mpu);
 }
 #if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9255) || defined(MPU9250))
-/*
-void ble_mpu_combined_update(ble_mpu_t *p_mpu, combined_values_t *combined_values) {
-  if (p_mpu->conn_handle != BLE_CONN_HANDLE_INVALID) {
-    uint16_t len = sizeof(combined_values_t);
-    ble_gatts_hvx_params_t hvx_params;
-    memset(&hvx_params, 0, sizeof(hvx_params));
-
-    hvx_params.handle = p_mpu->combined_char_handles.value_handle;
-    hvx_params.type = BLE_GATT_HVX_NOTIFICATION;
-    hvx_params.offset = 0;
-    hvx_params.p_len = &len;
-    hvx_params.p_data = (uint8_t *)combined_values;
-    //^Converted to 8-bit values
-    sd_ble_gatts_hvx(p_mpu->conn_handle, &hvx_params);
-  }
-}
-//*/
 
 void ble_mpu_combined_update_v2(ble_mpu_t *p_mpu) {
   uint32_t err_code;
