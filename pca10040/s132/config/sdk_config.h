@@ -5,6 +5,10 @@
 #include "app_config.h"
 #endif
 // <h> nRF_BLE 
+#ifndef FAST_SPI_ENABLED 
+#define FAST_SPI_ENABLED 0
+#endif
+
 #ifndef LEDS_ENABLE
 #define LEDS_ENABLE 1
 #endif
@@ -2139,7 +2143,7 @@
 // <7=> 7 
 
 #ifndef SPI_DEFAULT_CONFIG_IRQ_PRIORITY
-#define SPI_DEFAULT_CONFIG_IRQ_PRIORITY 7
+#define SPI_DEFAULT_CONFIG_IRQ_PRIORITY 6
 #endif
 
 // <e> SPI0_ENABLED - Enable SPI0 instance
@@ -2152,7 +2156,8 @@
  
 
 #ifndef SPI0_USE_EASY_DMA
-#define SPI0_USE_EASY_DMA 0
+
+#define SPI0_USE_EASY_DMA 1
 #endif
 
 // <o> SPI0_DEFAULT_FREQUENCY  - SPI frequency

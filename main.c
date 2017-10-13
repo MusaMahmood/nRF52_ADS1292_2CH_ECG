@@ -90,8 +90,8 @@
 #define DEVICE_FIRMWARE_STRING "Version 13.1.0"
 ble_eeg_t m_eeg;
 static bool m_connected = false;
-#define SPI_SCLK_WRITE_REG 2
-#define SPI_SCLK_SAMPLING 8
+#define SPI_SCLK_WRITE_REG 0
+#define SPI_SCLK_SAMPLING 4
 #endif
 
 #if defined(MPU9250) || defined(MPU9255) //mpu_send_timeout_handler
@@ -106,7 +106,6 @@ APP_TIMER_DEF(m_mpu_send_timer_id);
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
 #include "nrf_drv_saadc.h"
 #define SAMPLES_IN_BUFFER 4
-//volatile uint8_t state = 1;
 #define SAADC_BURST_MODE 1 //Set to 1 to enable BURST mode, otherwise set to 0.
 static nrf_saadc_value_t m_buffer_pool[SAMPLES_IN_BUFFER];
 static uint32_t m_adc_evt_counter;
@@ -114,9 +113,9 @@ static uint32_t m_adc_evt_counter;
 
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
 #include "ble_bas.h"
-#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(5000) /**< Battery level measurement interval (ticks). */
-APP_TIMER_DEF(m_battery_timer_id);                         /**< Battery timer. */
-static ble_bas_t m_bas;                                    /**< Structure used to identify the battery service. */
+#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(30000) /**< Battery level measurement interval (ticks). */
+APP_TIMER_DEF(m_battery_timer_id);                        /**< Battery timer. */
+static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
 #endif
 
 #if defined(APP_TIMER_SAMPLING) && APP_TIMER_SAMPLING == 1
@@ -127,18 +126,18 @@ static uint16_t m_samples;
 
 #define APP_FEATURE_NOT_SUPPORTED BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2 /**< Reply when unsupported features are requested. */
 
-#define DEVICE_NAME "nRF52-2CH-ECG"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
-#define DEVICE_NAME_500 "nRF52-2CH-ECG-500Hz" //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
-#define DEVICE_NAME_1k "nRF52-2CH-ECG-1kHz"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
-#define DEVICE_NAME_2k "nRF52-2CH-ECG-2kHz"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
-#define DEVICE_NAME_4k "nRF52-2CH-ECG-4kHz"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
-#define DEVICE_NAME_8k "nRF52-2CH-ECG-8kHz"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "250Hz nRF52-ECG2"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME_500 "500Hz nRF52-ECG2" //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME_1k "1k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME_2k "2k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME_4k "4k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME_8k "8k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 
 #define MANUFACTURER_NAME "Potato Labs" /**< Manufacturer. Will be passed to Device Information Service. */
 #define APP_ADV_INTERVAL 300            /**< The advertising interval (in units of 0.625 ms. This value corresponds to 187.5 ms). */
 #define APP_ADV_TIMEOUT_IN_SECONDS 180  /**< The advertising timeout in units of seconds. */
 
-#define MIN_CONN_INTERVAL MSEC_TO_UNITS(16, UNIT_1_25_MS) /**< Minimum acceptable connection interval (0.1 seconds). */
+#define MIN_CONN_INTERVAL MSEC_TO_UNITS(7.5, UNIT_1_25_MS) /**< Minimum acceptable connection interval (0.1 seconds). */
 #define MAX_CONN_INTERVAL MSEC_TO_UNITS(20, UNIT_1_25_MS) /**< Maximum acceptable connection interval (0.2 second). */
 #define SLAVE_LATENCY 0                                   /**< Slave latency. */
 #define CONN_SUP_TIMEOUT MSEC_TO_UNITS(4000, UNIT_10_MS)  /**< Connection supervisory timeout (4 seconds). */
@@ -149,7 +148,7 @@ static uint16_t m_samples;
 #define NEXT_CONN_PARAMS_UPDATE_DELAY APP_TIMER_TICKS(30000) /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT 3                       /**< Number of attempts before giving up the connection parameter negotiation. */
 
-#define HVN_TX_QUEUE_SIZE 12
+#define HVN_TX_QUEUE_SIZE 16
 
 #define SEC_PARAM_BOND 1                               /**< Perform bonding. */
 #define SEC_PARAM_MITM 0                               /**< Man In The Middle protection not required. */
@@ -808,7 +807,6 @@ void saadc_init(void) {
 
   //  err_code = nrf_drv_saadc_buffer_convert(m_buffer_pool[1], SAMPLES_IN_BUFFER);
   //  APP_ERROR_CHECK(err_code);
-
 }
 #endif
 
@@ -816,7 +814,12 @@ void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
   UNUSED_PARAMETER(pin);
   UNUSED_PARAMETER(action);
   if (m_connected) {
-    get_eeg_voltage_array_2ch(&m_eeg);
+#if ADS1291_2_REGDEFAULT_CONFIG1 == 0x06
+  get_eeg_voltage_array_2ch_low_resolution(&m_eeg);
+  m_eeg.eeg_ch1_count+=2;
+#else
+  get_eeg_voltage_array_2ch(&m_eeg);
+#endif
   }
 #if defined(APP_TIMER_SAMPLING) && APP_TIMER_SAMPLING == 1
   m_samples += 1;
@@ -881,9 +884,8 @@ int main(void) {
   conn_params_init();
 #if defined(ADS1292)
   //SPI STUFF FOR ADS:
-
   // Stop continuous data conversion and initialize registers to default values
-  ads1291_2_powerdn();
+  //  ads1291_2_powerdn();
   ads1291_2_powerup();
   ads_spi_init_with_sample_freq(SPI_SCLK_WRITE_REG);
   nrf_delay_ms(5);
