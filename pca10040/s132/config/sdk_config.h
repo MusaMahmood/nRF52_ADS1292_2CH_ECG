@@ -2139,7 +2139,7 @@
 // <7=> 7 
 
 #ifndef SPI_DEFAULT_CONFIG_IRQ_PRIORITY
-#define SPI_DEFAULT_CONFIG_IRQ_PRIORITY 7
+#define SPI_DEFAULT_CONFIG_IRQ_PRIORITY 6
 #endif
 
 // <e> SPI0_ENABLED - Enable SPI0 instance
@@ -3716,7 +3716,7 @@
 // <e> NRF_LOG_ENABLED - nrf_log - Logging
 //==========================================================
 #ifndef NRF_LOG_ENABLED
-#define NRF_LOG_ENABLED 0 //Check NRF_LOG_BACKEND.. .RTT
+#define NRF_LOG_ENABLED 1 //Check NRF_LOG_BACKEND.. .RTT
 #endif
 #if NRF_LOG_ENABLED
 // <e> NRF_LOG_USES_COLORS - If enabled then ANSI escape code for colors is prefixed to every string

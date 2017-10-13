@@ -91,7 +91,7 @@
 ble_eeg_t m_eeg;
 static bool m_connected = false;
 #define SPI_SCLK_WRITE_REG 0
-#define SPI_SCLK_SAMPLING 8
+#define SPI_SCLK_SAMPLING 4
 #endif
 
 #if defined(MPU9250) || defined(MPU9255) //mpu_send_timeout_handler
@@ -113,7 +113,7 @@ static uint32_t m_adc_evt_counter;
 
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
 #include "ble_bas.h"
-#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(5000) /**< Battery level measurement interval (ticks). */
+#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(30000) /**< Battery level measurement interval (ticks). */
 APP_TIMER_DEF(m_battery_timer_id);                        /**< Battery timer. */
 static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
 #endif
@@ -816,6 +816,7 @@ void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
   if (m_connected) {
 #if ADS1291_2_REGDEFAULT_CONFIG1 == 0x06
   get_eeg_voltage_array_2ch_low_resolution(&m_eeg);
+  m_eeg.eeg_ch1_count+=2;
 #else
   get_eeg_voltage_array_2ch(&m_eeg);
 #endif

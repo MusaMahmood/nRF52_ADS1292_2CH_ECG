@@ -51,7 +51,7 @@ uint8_t ads1291_2_default_regs[] = {
 
 static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(0);
 #define RX_DATA_LEN 12
-static uint8_t rx_data[RX_DATA_LEN];
+//static uint8_t rx_data[RX_DATA_LEN];
 static volatile bool spi_xfer_done;
 
 /**
@@ -148,7 +148,7 @@ void ads1291_2_init_regs(void) {
 
   /**@TODO: REWRITE THIS FUNCTION. Not sure it works correctly.*/
   uint8_t i = 0;
-  uint8_t num_registers = 12;
+  uint8_t num_registers = 11;
   uint8_t txrx_size = num_registers + 2;
   uint8_t tx_data_spi[txrx_size]; //Size = 14 bytes
   uint8_t rx_data_spi[txrx_size]; //Size = 14 bytes
@@ -162,9 +162,11 @@ void ads1291_2_init_regs(void) {
   tx_data_spi[0] = opcode_1;
   tx_data_spi[1] = num_registers - 1; //is the number of registers to write ? 1. (OPCODE2)
   //fill remainder of tx with commands:
-  for (i = 0; i < num_registers; i++) {
-    tx_data_spi[i + 2] = ads1291_2_default_regs[i];
-  }
+  //this should be memcpy
+  memcpy(&tx_data_spi[2], &ads1291_2_default_regs[0], num_registers);
+  //  for (i = 0; i < num_registers; i++) {
+  //    tx_data_spi[i + 2] = ads1291_2_default_regs[i];
+  //  }
   spi_xfer_done = false;
   APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, tx_data_spi, num_registers + 2, rx_data_spi, num_registers + 2));
   nrf_delay_ms(10);
@@ -302,6 +304,7 @@ void ads1291_2_check_id(void) {
 }
 
 void get_eeg_voltage_array_2ch(ble_eeg_t *p_eeg) {
+  uint8_t rx_data[9];
   memset(rx_data, 0, RX_DATA_LEN);
   spi_xfer_done = false;
   APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, NULL, 0, rx_data, 9));
@@ -318,17 +321,16 @@ void get_eeg_voltage_array_2ch(ble_eeg_t *p_eeg) {
 }
 
 void get_eeg_voltage_array_2ch_low_resolution(ble_eeg_t *p_eeg) {
-  memset(rx_data, 0, RX_DATA_LEN);
+  //  memset(rx_data, 0, RX_DATA_LEN);
+  uint8_t rx_data[9];
   spi_xfer_done = false;
-  APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, NULL, 0, rx_data, 8));
+  //  APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, NULL, 0, rx_data, 8));
+  nrf_drv_spi_transfer(&spi, NULL, NULL, rx_data, 9);
   while (!spi_xfer_done)
     __WFE();
-  if (rx_data[0] == 0xC0) {
-    p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count] = rx_data[3];
-    p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[4];
-    //  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 2] = rx_data[5];
-    p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[6];
-    p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[7];
-    //  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[8];
-  }
+
+  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count] = rx_data[3];
+  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[4];
+  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count] = rx_data[6];
+  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[7];
 }
