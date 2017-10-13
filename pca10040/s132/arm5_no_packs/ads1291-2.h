@@ -446,7 +446,7 @@ typedef enum {
 
 /* DEFAULT REGISTER VALUES ********************************************************/
 
-#define ADS1291_2_REGDEFAULT_CONFIG1 0x06   ///< Continuous conversion, data rate = 125->8kSPS
+#define ADS1291_2_REGDEFAULT_CONFIG1 0x05   ///< Continuous conversion, data rate = 125->8kSPS
 #define ADS1291_2_REGDEFAULT_CONFIG2 0xA3   ///< LOFF off, REFBUF on, VREF=2.42, CLK_EN=0, INT_TEST=1, TEST_FREQ @ 1Hz
 #define ADS1291_2_REGDEFAULT_LOFF 0x00      ///< 95%/5% LOFF comparator threshold, DC lead-off at 6 nA
 #define ADS1291_2_REGDEFAULT_CH1SET 0x60    ///< Channel on, G=12, normal electrode

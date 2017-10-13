@@ -49,6 +49,8 @@
       <file file_name="app_mpu.c" />
       <file file_name="ble_mpu.c" />
       <file file_name="nrf_drv_mpu_twi.c" />
+      <file file_name="spi_master_fast.h" />
+      <file file_name="spi_master_fast.c" />
     </folder>
     <folder Name="Board Definition">
       <file file_name="../../../../../../components/boards/boards.c" />

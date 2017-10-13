@@ -5,6 +5,10 @@
 #include "app_config.h"
 #endif
 // <h> nRF_BLE 
+#ifndef FAST_SPI_ENABLED 
+#define FAST_SPI_ENABLED 0
+#endif
+
 #ifndef LEDS_ENABLE
 #define LEDS_ENABLE 1
 #endif
@@ -2152,6 +2156,7 @@
  
 
 #ifndef SPI0_USE_EASY_DMA
+
 #define SPI0_USE_EASY_DMA 1
 #endif
 
