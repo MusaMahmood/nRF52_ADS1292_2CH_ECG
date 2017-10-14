@@ -899,7 +899,6 @@ int main(void) {
 
   // Put AFE to sleep while we're not connected
   ads1291_2_standby();
-  body_voltage_t body_voltage;
   nrf_delay_ms(10);
   m_eeg.eeg_ch1_count = 0;
 #endif

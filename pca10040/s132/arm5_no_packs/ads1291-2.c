@@ -343,7 +343,7 @@ void ads1291_2_check_id(void) {
 
 void get_eeg_voltage_array_2ch(ble_eeg_t *p_eeg) {
   uint8_t rx_data[9];
-  memset(rx_data, 0, RX_DATA_LEN);
+//  memset(rx_data, 0, RX_DATA_LEN);
   spi_xfer_done = false;
 #if defined(FAST_SPI_ENABLED) && FAST_SPI_ENABLED == 1
   spi_master_tx_rx(SPI0, 9, rx_data, rx_data);
@@ -380,4 +380,5 @@ uint8_t tx_data[9];
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count] = rx_data[6];
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[7];
 //  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count + 2] = rx_data[8];
+  
 }
