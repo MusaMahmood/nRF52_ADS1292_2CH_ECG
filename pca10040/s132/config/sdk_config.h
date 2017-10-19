@@ -9,8 +9,12 @@
 #define FAST_SPI_ENABLED 0
 #endif
 
+#ifndef SPI_BLOCKING_MODE 
+#define SPI_BLOCKING_MODE 0
+#endif
+
 #ifndef LEDS_ENABLE
-#define LEDS_ENABLE 1
+#define LEDS_ENABLE 0
 #endif
 
 //==========================================================
@@ -2245,7 +2249,7 @@
 // <4=> Debug 
 
 #ifndef SPI_CONFIG_LOG_LEVEL
-#define SPI_CONFIG_LOG_LEVEL 4
+#define SPI_CONFIG_LOG_LEVEL 3
 #endif
 
 // <o> SPI_CONFIG_INFO_COLOR  - ANSI escape code prefix.
@@ -3721,7 +3725,7 @@
 // <e> NRF_LOG_ENABLED - nrf_log - Logging
 //==========================================================
 #ifndef NRF_LOG_ENABLED
-#define NRF_LOG_ENABLED 1 //Check NRF_LOG_BACKEND.. .RTT
+#define NRF_LOG_ENABLED 0 //Check NRF_LOG_BACKEND.. .RTT
 #endif
 #if NRF_LOG_ENABLED
 // <e> NRF_LOG_USES_COLORS - If enabled then ANSI escape code for colors is prefixed to every string
@@ -3801,7 +3805,7 @@
 // <4=> Debug 
 
 #ifndef NRF_LOG_DEFAULT_LEVEL
-#define NRF_LOG_DEFAULT_LEVEL 4
+#define NRF_LOG_DEFAULT_LEVEL 3
 #endif
 
 // <e> NRF_LOG_DEFERRED - Enable deffered logger.

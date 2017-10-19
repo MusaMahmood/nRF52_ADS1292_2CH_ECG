@@ -55,7 +55,7 @@ uint8_t ads1291_2_default_regs[] = {
 #else
 static const nrf_drv_spi_t spi = NRF_DRV_SPI_INSTANCE(0);
 #endif
-#define RX_DATA_LEN 12
+#define RX_DATA_LEN 9
 static uint8_t rx_data[RX_DATA_LEN];
 static volatile bool spi_xfer_done;
 
@@ -342,13 +342,11 @@ void ads1291_2_check_id(void) {
 }
 
 void get_eeg_voltage_array_2ch(ble_eeg_t *p_eeg) {
-  uint8_t rx_data[9];
-//  memset(rx_data, 0, RX_DATA_LEN);
   spi_xfer_done = false;
 #if defined(FAST_SPI_ENABLED) && FAST_SPI_ENABLED == 1
   spi_master_tx_rx(SPI0, 9, rx_data, rx_data);
 #else
-  APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, NULL, 0, rx_data, 9));
+  nrf_drv_spi_transfer(&spi, NULL, 0, rx_data, 9);
   while (!spi_xfer_done)
     __WFE();
 #endif
@@ -359,26 +357,27 @@ void get_eeg_voltage_array_2ch(ble_eeg_t *p_eeg) {
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[6];
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[7];
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[8];
+//  NRF_LOG_HEXDUMP_INFO(rx_data, 9 * sizeof(uint8_t));
   //  }
 }
 
 void get_eeg_voltage_array_2ch_low_resolution(ble_eeg_t *p_eeg) {
-//  memset(rx_data, 0, RX_DATA_LEN);
+  //  memset(rx_data, 0, RX_DATA_LEN);
   spi_xfer_done = false;
 //  APP_ERROR_CHECK(nrf_drv_spi_transfer(&spi, NULL, 0, rx_data, 8));
 #if defined(FAST_SPI_ENABLED) && FAST_SPI_ENABLED == 1
-uint8_t tx_data[9];
+  uint8_t tx_data[9];
   spi_master_tx_rx(SPI0, 9, tx_data, rx_data);
 #else
   nrf_drv_spi_transfer(&spi, NULL, NULL, rx_data, 9);
   while (!spi_xfer_done)
     __WFE();
+//    __WFE();
 #endif
   p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count] = rx_data[3];
   p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[4];
-//  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 2] = rx_data[5];
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count] = rx_data[6];
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[7];
-//  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count + 2] = rx_data[8];
-  
+//  if (rx_data[0]!=0xC0) 
+  NRF_LOG_HEXDUMP_INFO(rx_data, 12 * sizeof(uint8_t));
 }

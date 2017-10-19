@@ -26,16 +26,6 @@
 #define ADS1291_2_SS_PIN 15
 #endif
 
-/**
- *	\brief Error codes for interacting with the ADS1291_2.
- *
- */
-typedef enum {
-  ADS1291_2_STATUS_OK = 0,         ///< No error.
-  ADS1291_2_ERROR_SPI_TIMEOUT = 1, ///< SPI timed out. Check SPI configuration and hardware connections.
-                                   /* Expand with other codes if desired */
-} ads1291_2_error_t;
-
 #define ADS1291_2_NUM_REGS 12
 
 /**
@@ -87,17 +77,20 @@ typedef enum {
 
 /* DEFAULT REGISTER VALUES ********************************************************/
 
-#define ADS1291_2_REGDEFAULT_CONFIG1 0x06   ///< Continuous conversion, data rate = 125->8kSPS
-#define ADS1291_2_REGDEFAULT_CONFIG2 0xA3   ///< LOFF off, REFBUF on, VREF=2.42, CLK_EN=0, INT_TEST=1, TEST_FREQ @ 1Hz
+#define ADS1291_2_REGDEFAULT_CONFIG1 0x05   ///< Continuous conversion, data rate = 125->8kSPS
+#define ADS1291_2_REGDEFAULT_CONFIG2 0xA0 //A3 for test signal @ 1Hz   ///< LOFF off, REFBUF on, VREF=2.42, CLK_EN=0, INT_TEST=1, TEST_FREQ @ 1Hz
 #define ADS1291_2_REGDEFAULT_LOFF 0x00      ///< 95%/5% LOFF comparator threshold, DC lead-off at 6 nA
+//0x65 == 1 Hz test signal
+//0x?4 == temp sensor
+// 0x81 disabled
 #define ADS1291_2_REGDEFAULT_CH1SET 0x60    ///< Channel on, G=12, normal electrode
 #define ADS1291_2_REGDEFAULT_CH2SET 0x60    ///< Channel off, G=1, input short
-#define ADS1291_2_REGDEFAULT_RLD_SENS 0x23  ///< Chop @ fmod/16, RLD buffer on, LOFF off, RLD derivation from CH1 P+N
+#define ADS1291_2_REGDEFAULT_RLD_SENS 0x2F  ///< Chop @ fmod/16, RLD buffer on, LOFF off, RLD derivation from CH1 P+N
 #define ADS1291_2_REGDEFAULT_LOFF_SENS 0x00 ///< Current source @ IN+, sink @ IN-, all LOFF channels disconnected
 #define ADS1291_2_REGDEFAULT_LOFF_STAT 0x00 ///< Fmod = fclk/4 (for fclk = 512 kHz)
 #define ADS1291_2_REGDEFAULT_RESP1 0x02     ///< Resp measurement disabled
 #define ADS1291_2_REGDEFAULT_RESP2 0x07     ///< Offset calibration disabled, RLD internally generated
-#define ADS1291_2_REGDEFAULT_GPIO 0x00      ///< All GPIO set to output, logic low
+#define ADS1291_2_REGDEFAULT_GPIO 0x00      ///< All GPIO set to output,
 /**@TYPEDEFS: */
 
 /**************************************************************************************************************************************************

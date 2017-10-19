@@ -91,7 +91,7 @@
 ble_eeg_t m_eeg;
 static bool m_connected = false;
 #define SPI_SCLK_WRITE_REG 0
-#define SPI_SCLK_SAMPLING 4
+#define SPI_SCLK_SAMPLING 8
 #endif
 
 #if defined(MPU9250) || defined(MPU9255) //mpu_send_timeout_handler
@@ -148,7 +148,7 @@ static uint16_t m_samples;
 #define NEXT_CONN_PARAMS_UPDATE_DELAY APP_TIMER_TICKS(30000) /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT 3                       /**< Number of attempts before giving up the connection parameter negotiation. */
 
-#define HVN_TX_QUEUE_SIZE 16
+#define HVN_TX_QUEUE_SIZE 32 //16
 
 #define SEC_PARAM_BOND 1                               /**< Perform bonding. */
 #define SEC_PARAM_MITM 0                               /**< Man In The Middle protection not required. */
@@ -815,8 +815,9 @@ void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
   UNUSED_PARAMETER(action);
   if (m_connected) {
 #if ADS1291_2_REGDEFAULT_CONFIG1 == 0x06
-  get_eeg_voltage_array_2ch_low_resolution(&m_eeg);
-  m_eeg.eeg_ch1_count+=2;
+  get_eeg_voltage_array_2ch(&m_eeg);
+//get_eeg_voltage_array_2ch_low_resolution(&m_eeg);
+//  m_eeg.eeg_ch1_count+=2;
 #else
   get_eeg_voltage_array_2ch(&m_eeg);
 #endif
