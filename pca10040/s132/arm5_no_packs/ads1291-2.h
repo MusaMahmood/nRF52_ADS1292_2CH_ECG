@@ -77,14 +77,14 @@
 
 /* DEFAULT REGISTER VALUES ********************************************************/
 
-#define ADS1291_2_REGDEFAULT_CONFIG1 0x05   ///< Continuous conversion, data rate = 125->8kSPS
+#define ADS1291_2_REGDEFAULT_CONFIG1 0x01   ///< Continuous conversion, data rate = 125->8kSPS
 #define ADS1291_2_REGDEFAULT_CONFIG2 0xA0 //A3 for test signal @ 1Hz   ///< LOFF off, REFBUF on, VREF=2.42, CLK_EN=0, INT_TEST=1, TEST_FREQ @ 1Hz
 #define ADS1291_2_REGDEFAULT_LOFF 0x00      ///< 95%/5% LOFF comparator threshold, DC lead-off at 6 nA
 //0x65 == 1 Hz test signal
 //0x?4 == temp sensor
 // 0x81 disabled
 #define ADS1291_2_REGDEFAULT_CH1SET 0x60    ///< Channel on, G=12, normal electrode
-#define ADS1291_2_REGDEFAULT_CH2SET 0x60    ///< Channel off, G=1, input short
+#define ADS1291_2_REGDEFAULT_CH2SET 0x81    ///< Channel off, G=1, input short
 #define ADS1291_2_REGDEFAULT_RLD_SENS 0x2F  ///< Chop @ fmod/16, RLD buffer on, LOFF off, RLD derivation from CH1 P+N
 #define ADS1291_2_REGDEFAULT_LOFF_SENS 0x00 ///< Current source @ IN+, sink @ IN-, all LOFF channels disconnected
 #define ADS1291_2_REGDEFAULT_LOFF_STAT 0x00 ///< Fmod = fclk/4 (for fclk = 512 kHz)

@@ -350,15 +350,15 @@ void get_eeg_voltage_array_2ch(ble_eeg_t *p_eeg) {
   while (!spi_xfer_done)
     __WFE();
 #endif
-  //  if (((rx_data[0] + rx_data[1] + rx_data[2]) == 0xC0) && ((rx_data[9] + rx_data[10] + rx_data[11]) == 0x00)) {
-  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count] = rx_data[3];
-  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[4];
-  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 2] = rx_data[5];
-  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[6];
-  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[7];
-  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[8];
-//  NRF_LOG_HEXDUMP_INFO(rx_data, 9 * sizeof(uint8_t));
-  //  }
+  //  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count] = rx_data[3];
+  //  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[4];
+  //  p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 2] = rx_data[5];
+  //  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[6];
+  //  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[7];
+  //  p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count++] = rx_data[8];
+  memcpy_fast(&p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count], &rx_data[3], 3);
+  memcpy_fast(&p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count], &rx_data[6], 3);
+  p_eeg->eeg_ch1_count += 3;
 }
 
 void get_eeg_voltage_array_2ch_low_resolution(ble_eeg_t *p_eeg) {
@@ -378,6 +378,6 @@ void get_eeg_voltage_array_2ch_low_resolution(ble_eeg_t *p_eeg) {
   p_eeg->eeg_ch1_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[4];
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count] = rx_data[6];
   p_eeg->eeg_ch2_buffer[p_eeg->eeg_ch1_count + 1] = rx_data[7];
-//  if (rx_data[0]!=0xC0) 
+  //  if (rx_data[0]!=0xC0)
   NRF_LOG_HEXDUMP_INFO(rx_data, 12 * sizeof(uint8_t));
 }

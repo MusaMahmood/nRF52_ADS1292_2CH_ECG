@@ -78,7 +78,7 @@
 #define NRF_LOG_MODULE_NAME "APP"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
-
+#warning ("CHECK LFCLK & LED DEFS IN custom_board.h")
 #if defined(ADS1292)
 #include "ads1291-2.h"
 #include "ble_dis.h"
@@ -91,7 +91,7 @@
 ble_eeg_t m_eeg;
 static bool m_connected = false;
 #define SPI_SCLK_WRITE_REG 0
-#define SPI_SCLK_SAMPLING 8
+#define SPI_SCLK_SAMPLING 2
 #endif
 
 #if defined(MPU9250) || defined(MPU9255) //mpu_send_timeout_handler
@@ -482,8 +482,8 @@ static void on_ble_evt(ble_evt_t *p_ble_evt) {
     m_connected = false;
     ads1291_2_standby();
 #if LEDS_ENABLE == 1
-    nrf_gpio_pin_clear(LED_2); // Green
-    nrf_gpio_pin_set(LED_1);   //Blue
+    nrf_gpio_pin_clear(LED_2); // Blue
+    nrf_gpio_pin_set(LED_1);   // Green
 #endif
     advertising_start();
     break; // BLE_GAP_EVT_DISCONNECTED
@@ -827,7 +827,10 @@ void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
 #endif
   if (m_eeg.eeg_ch1_count == EEG_PACKET_LENGTH) {
     m_eeg.eeg_ch1_count = 0;
-    ble_eeg_update_2ch(&m_eeg);
+    if (ADS1291_2_REGDEFAULT_CH2SET != 0x81)
+      ble_eeg_update_2ch(&m_eeg);
+    else
+      ble_eeg_update_1ch_v2(&m_eeg);
   }
 }
 
