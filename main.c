@@ -100,7 +100,7 @@ ble_mpu_t m_mpu;
 #include "app_mpu.h"
 #include "nrf_drv_twi.h"
 APP_TIMER_DEF(m_mpu_send_timer_id);
-#define TICKS_MPU_SAMPLING_INTERVAL APP_TIMER_TICKS(32)
+#define TICKS_MPU_SAMPLING_INTERVAL APP_TIMER_TICKS(20)
 #endif
 
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
@@ -208,7 +208,7 @@ static void mpu_send_timeout_handler(void *p_context) {
   //DEPENDS ON SAMPLING RATE
   mpu_read_accel_array(&m_mpu);
   mpu_read_gyro_array(&m_mpu);
-  if (m_mpu.mpu_count == 60) {
+  if (m_mpu.mpu_count == 24) {
     m_mpu.mpu_count = 0;
     ble_mpu_combined_update_v2(&m_mpu);
   }
