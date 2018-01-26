@@ -94,15 +94,6 @@ static bool m_connected = false;
 #define SPI_SCLK_SAMPLING 2
 #endif
 
-#if defined(MPU9250) || defined(MPU9255) //mpu_send_timeout_handler
-#include "ble_mpu.h"
-ble_mpu_t m_mpu;
-#include "app_mpu.h"
-#include "nrf_drv_twi.h"
-APP_TIMER_DEF(m_mpu_send_timer_id);
-#define TICKS_MPU_SAMPLING_INTERVAL APP_TIMER_TICKS(32)
-#endif
-
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
 #include "nrf_drv_saadc.h"
 #define SAMPLES_IN_BUFFER 4
@@ -113,7 +104,7 @@ static uint32_t m_adc_evt_counter;
 
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
 #include "ble_bas.h"
-#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(30000) /**< Battery level measurement interval (ticks). */
+#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(10000) /**< Battery level measurement interval (ticks). */
 APP_TIMER_DEF(m_battery_timer_id);                        /**< Battery timer. */
 static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
 #endif
@@ -165,15 +156,13 @@ static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the curr
 static nrf_ble_gatt_t m_gatt;                            /**< GATT module instance. */
 
 static ble_uuid_t m_adv_uuids[] =
-    {
-        {BLE_UUID_BIOPOTENTIAL_EEG_MEASUREMENT_SERVICE, BLE_UUID_TYPE_BLE},
-#if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
-        {BLE_UUID_MPU_SERVICE_UUID, BLE_UUID_TYPE_BLE},
-#endif
+  {
+      {BLE_UUID_BIOPOTENTIAL_EEG_MEASUREMENT_SERVICE, BLE_UUID_TYPE_BLE},
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
-        {BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},
+      {BLE_UUID_BATTERY_SERVICE, BLE_UUID_TYPE_BLE},
 #endif
-        {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}}; /**< Universally unique service identifiers. */
+      {BLE_UUID_DEVICE_INFORMATION_SERVICE, BLE_UUID_TYPE_BLE}
+  }; /**< Universally unique service identifiers. */
 
 static void advertising_start(void);
 
@@ -203,17 +192,6 @@ static void m_sampling_timeout_handler(void *p_context) {
 #endif
 }
 #endif
-#if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
-static void mpu_send_timeout_handler(void *p_context) {
-  //DEPENDS ON SAMPLING RATE
-  mpu_read_accel_array(&m_mpu);
-  mpu_read_gyro_array(&m_mpu);
-  if (m_mpu.mpu_count == 240) {
-    m_mpu.mpu_count = 0;
-    ble_mpu_combined_update_v2(&m_mpu);
-  }
-}
-#endif /**@(defined(MPU60x0) || defined(MPU9150) || defined(MPU9255))*/
 
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
 
@@ -243,10 +221,6 @@ static void timers_init(void) {
   //Create timers
   ret_code_t err_code = app_timer_init();
   APP_ERROR_CHECK(err_code);
-#if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
-  err_code = app_timer_create(&m_mpu_send_timer_id, APP_TIMER_MODE_REPEATED, mpu_send_timeout_handler);
-  APP_ERROR_CHECK(err_code);
-#endif
 
 #if defined(APP_TIMER_SAMPLING) && APP_TIMER_SAMPLING == 1
   err_code = app_timer_create(&m_sampling_timer_id, APP_TIMER_MODE_REPEATED, m_sampling_timeout_handler);
@@ -321,10 +295,6 @@ static void gatt_init(void) {
 static void services_init(void) {
   uint32_t err_code;
   ble_eeg_service_init(&m_eeg);
-/**@Device Information Service:*/
-#if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
-  ble_mpu_service_init(&m_mpu);
-#endif
 
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
   ble_bas_init_t bas_init;
@@ -419,11 +389,6 @@ static void application_timers_start(void) {
   APP_ERROR_CHECK(err_code);
 #endif
 
-#if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
-  err_code = app_timer_start(m_mpu_send_timer_id, TICKS_MPU_SAMPLING_INTERVAL, NULL);
-  APP_ERROR_CHECK(err_code);
-#endif
-
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
   err_code = app_timer_start(m_battery_timer_id, BATTERY_LEVEL_MEAS_INTERVAL, NULL);
   APP_ERROR_CHECK(err_code);
@@ -457,7 +422,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 //#if defined(BOARD_EXG_V3)
 #if LEDS_ENABLE == 1
     nrf_gpio_pin_clear(LED_2); // Green
-    nrf_gpio_pin_set(LED_1);   //Blue
+//    nrf_gpio_pin_set(LED_1);   //Blue
 #endif
     break;
 
@@ -483,7 +448,7 @@ static void on_ble_evt(ble_evt_t *p_ble_evt) {
     ads1291_2_standby();
 #if LEDS_ENABLE == 1
     nrf_gpio_pin_clear(LED_2); // Blue
-    nrf_gpio_pin_set(LED_1);   // Green
+//    nrf_gpio_pin_set(LED_1);   // Green
 #endif
     advertising_start();
     break; // BLE_GAP_EVT_DISCONNECTED
@@ -494,7 +459,7 @@ static void on_ble_evt(ble_evt_t *p_ble_evt) {
     ads1291_2_wake();
 #if LEDS_ENABLE == 1
     nrf_gpio_pin_set(LED_2);
-    nrf_gpio_pin_clear(LED_1);
+//    nrf_gpio_pin_clear(LED_1);
 #endif
     NRF_LOG_INFO("Connected.\r\n");
     m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
@@ -572,9 +537,6 @@ static void ble_evt_dispatch(ble_evt_t *p_ble_evt) {
   ble_bas_on_ble_evt(&m_bas, p_ble_evt);
 #endif
   ble_eeg_on_ble_evt(&m_eeg, p_ble_evt);
-#if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
-  ble_mpu_on_ble_evt(&m_mpu, p_ble_evt);
-#endif
 }
 
 /**@brief Function for dispatching a system event to interested modules.
@@ -732,25 +694,6 @@ static void advertising_start(void) {
   APP_ERROR_CHECK(err_code);
 }
 
-#if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
-///*
-//MPU9250;MPU9255
-void mpu_setup(void) {
-  ret_code_t ret_code;
-  // Initiate MPU driver
-  ret_code = mpu_init();
-  APP_ERROR_CHECK(ret_code); // Check for errors in return value
-
-  // Setup and configure the MPU with intial values
-  mpu_config_t p_mpu_config = MPU_DEFAULT_CONFIG(); // Load default values
-  p_mpu_config.smplrt_div = 19;                     // Change sampelrate. Sample Rate = Gyroscope Output Rate / (1 + SMPLRT_DIV). 19 gives a sample rate of 50Hz
-  p_mpu_config.accel_config.afs_sel = AFS_16G;      // Set accelerometer full scale range to 2G
-  ret_code = mpu_config(&p_mpu_config);             // Configure the MPU with above values
-  APP_ERROR_CHECK(ret_code);                        // Check for errors in return value
-}
-//*/
-#endif
-
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
 
 void saadc_callback(nrf_drv_saadc_evt_t const *p_event) {
@@ -840,9 +783,9 @@ static void ads1299_gpio_init(void) {
   nrf_gpio_pin_dir_set(ADS1291_2_PWDN_PIN, NRF_GPIO_PIN_DIR_OUTPUT);
 #endif
 #if defined(BOARD_2CH_ECG_RAT) && LEDS_ENABLE == 1
-  nrf_gpio_cfg_output(LED_1);
+//  nrf_gpio_cfg_output(LED_1);
   nrf_gpio_cfg_output(LED_2);
-  nrf_gpio_pin_set(LED_1);
+//  nrf_gpio_pin_set(LED_1);
   nrf_gpio_pin_set(LED_2);
 #endif
 #ifdef BATTERY_LOAD_SWITCH_CTRL_PIN
@@ -907,10 +850,6 @@ int main(void) {
   m_eeg.eeg_ch1_count = 0;
 #endif
 
-#if (defined(MPU60x0) || defined(MPU9150) || defined(MPU9250) || defined(MPU9255))
-  mpu_setup();
-#endif
-
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
   saadc_init();
 #endif
@@ -922,7 +861,7 @@ int main(void) {
   NRF_LOG_FLUSH();
 #if LEDS_ENABLE == 1
   nrf_gpio_pin_clear(LED_2); // Green
-  nrf_gpio_pin_set(LED_1);   //Blue
+//  nrf_gpio_pin_set(LED_1);   //Blue
 #endif
 #if defined(APP_TIMER_SAMPLING) && APP_TIMER_SAMPLING == 1
   m_samples = 0;
