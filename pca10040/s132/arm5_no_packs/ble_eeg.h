@@ -80,7 +80,7 @@ void ble_eeg_on_ble_evt(ble_eeg_t *p_eeg, ble_evt_t *p_ble_evt);
 /**@brief function for updating/notifying BLE of new value.
 *
 */
-
+void ble_eeg_update_1ch_v1(ble_eeg_t *p_eeg);
 void ble_eeg_update_1ch_v2(ble_eeg_t *p_eeg);
 void ble_eeg_update_2ch(ble_eeg_t *p_eeg);
 

@@ -83,9 +83,9 @@
 //0x65 == 1 Hz test signal
 //0x?4 == temp sensor
 // 0x81 disabled
-#define ADS1291_2_REGDEFAULT_CH1SET 0x60    ///< Channel on, G=12, normal electrode
-#define ADS1291_2_REGDEFAULT_CH2SET 0x81    ///< Channel off, G=1, input short
-#define ADS1291_2_REGDEFAULT_RLD_SENS 0x23  ///< Chop @ fmod/16, RLD buffer on, LOFF off, RLD derivation from CH1 P+N
+#define ADS1291_2_REGDEFAULT_CH1SET 0x81    ///< Channel on, G=12, normal electrode
+#define ADS1291_2_REGDEFAULT_CH2SET 0x60    ///< Channel off, G=1, input short
+#define ADS1291_2_REGDEFAULT_RLD_SENS 0x2C  ///< Chop @ fmod/16, RLD buffer on, LOFF off, RLD derivation from CH1 P+N
 #define ADS1291_2_REGDEFAULT_LOFF_SENS 0x00 ///< Current source @ IN+, sink @ IN-, all LOFF channels disconnected
 #define ADS1291_2_REGDEFAULT_LOFF_STAT 0x00 ///< Fmod = fclk/4 (for fclk = 512 kHz)
 #define ADS1291_2_REGDEFAULT_RESP1 0x02     ///< Resp measurement disabled

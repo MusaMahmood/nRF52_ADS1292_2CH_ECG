@@ -827,10 +827,12 @@ void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
 #endif
   if (m_eeg.eeg_ch1_count == EEG_PACKET_LENGTH) {
     m_eeg.eeg_ch1_count = 0;
-    if (ADS1291_2_REGDEFAULT_CH2SET != 0x81)
-      ble_eeg_update_2ch(&m_eeg);
-    else
+    if (ADS1291_2_REGDEFAULT_CH2SET == 0x81)
+      ble_eeg_update_1ch_v1(&m_eeg);
+    else if (ADS1291_2_REGDEFAULT_CH1SET == 0x81)
       ble_eeg_update_1ch_v2(&m_eeg);
+    else
+      ble_eeg_update_2ch(&m_eeg);
   }
 }
 

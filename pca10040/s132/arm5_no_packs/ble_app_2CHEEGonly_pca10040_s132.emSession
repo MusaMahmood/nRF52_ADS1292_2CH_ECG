@@ -58,13 +58,10 @@
   <Watches active="0" update="Never"/>
  </Watch4>
  <Files>
-  <SessionOpenFile windowGroup="DockEditLeft" x="6" y="60" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../main.c" debugPath="../../../main.c" selected="0" top="42" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="343" useTextEdit="1" useBinaryEdit="0" left="0" path="ads1291-2.c" debugPath="ads1291-2.c" selected="0" top="28" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="16" useTextEdit="1" useBinaryEdit="0" left="0" path="../config/sdk_config.h" debugPath="../config/sdk_config.h" selected="0" top="0" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="174" useTextEdit="1" useBinaryEdit="0" left="0" path="ble_eeg.c" debugPath="ble_eeg.c" selected="0" top="72" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="17" useTextEdit="1" useBinaryEdit="0" left="0" path="custom_board.h" debugPath="custom_board.h" selected="0" top="5" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="623" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../../../../components/softdevice/s132/headers/ble_gatts.h" debugPath="../../../../../../components/softdevice/s132/headers/ble_gatts.h" selected="0" top="593" codecName="Default"/>
-  <SessionOpenFile windowGroup="DockEditLeft" x="52" y="103" useTextEdit="1" useBinaryEdit="0" left="0" path="ads1291-2.h" debugPath="ads1291-2.h" selected="1" top="51" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="115" useTextEdit="1" useBinaryEdit="0" left="0" path="ads1291-2.h" debugPath="ads1291-2.h" selected="0" top="93" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" useBinaryEdit="0" left="0" path="ads1291-2.c" debugPath="ads1291-2.c" selected="0" top="324" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="40" y="816" useTextEdit="1" useBinaryEdit="0" left="0" path="../../../main.c" debugPath="../../../main.c" selected="1" top="805" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="189" useTextEdit="1" useBinaryEdit="0" left="0" path="ble_eeg.c" debugPath="ble_eeg.c" selected="0" top="145" codecName="Default"/>
  </Files>
- <ARMCrossStudioWindow activeProject="ble_app_2CHEEGonly_pca10040_s132" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="nrf52832_xxaa" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/mmahmood31/Google Drive/nRF5_SDK_13.1.0/components/drivers_nrf/hal" debugSearchPath="" autoConnectCapabilities="3711"/>
+ <ARMCrossStudioWindow activeProject="ble_app_2CHEEGonly_pca10040_s132" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="nrf52832_xxaa" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/mmahmood31/Google Drive/nRF5_SDK_13.1.0/components/drivers_nrf/hal" debugSearchPath="" autoConnectCapabilities="1132"/>
 </session>
