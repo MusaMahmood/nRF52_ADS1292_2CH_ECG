@@ -100,20 +100,20 @@ ble_mpu_t m_mpu;
 #include "app_mpu.h"
 #include "nrf_drv_twi.h"
 APP_TIMER_DEF(m_mpu_send_timer_id);
-#define TICKS_MPU_SAMPLING_INTERVAL APP_TIMER_TICKS(20)
+#define TICKS_MPU_SAMPLING_INTERVAL APP_TIMER_TICKS(32)
 #endif
 
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
 #include "nrf_drv_saadc.h"
 #define SAMPLES_IN_BUFFER 4
-#define SAADC_BURST_MODE 1 //Set to 1 to enable BURST mode, otherwise set to 0.
+#define SAADC_BURST_MODE 1 //Set to 1 to enable BURST mode, otherwise set to 0.`
 static nrf_saadc_value_t m_buffer_pool[SAMPLES_IN_BUFFER];
 static uint32_t m_adc_evt_counter;
 #endif
 
 #if defined(BLE_BAS_ENABLED) && BLE_BAS_ENABLED == 1
 #include "ble_bas.h"
-#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(30000) /**< Battery level measurement interval (ticks). */
+#define BATTERY_LEVEL_MEAS_INTERVAL APP_TIMER_TICKS(5000) /**< Battery level measurement interval (ticks). */
 APP_TIMER_DEF(m_battery_timer_id);                        /**< Battery timer. */
 static ble_bas_t m_bas;                                   /**< Structure used to identify the battery service. */
 #endif
@@ -126,9 +126,10 @@ static uint16_t m_samples;
 
 #define APP_FEATURE_NOT_SUPPORTED BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2 /**< Reply when unsupported features are requested. */
 
-#define DEVICE_NAME "250Hz nRF52-ECG2"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "nRF52_ECG"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_500 "500Hz nRF52-ECG2" //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_1k "1k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME_2k "2k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_2k "2k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_4k "4k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_8k "8k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
@@ -222,7 +223,7 @@ static void battery_level_update(void) {
 //TODO: CALL SAADC
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
   //Enable load switch:
-  nrf_gpio_pin_clear(BATTERY_LOAD_SWITCH_CTRL_PIN);
+  nrf_gpio_pin_set(BATTERY_LOAD_SWITCH_CTRL_PIN);
   //Sample with ADC
   nrf_drv_saadc_sample();
 #endif
@@ -775,7 +776,7 @@ void saadc_callback(nrf_drv_saadc_evt_t const *p_event) {
       APP_ERROR_HANDLER(err_code);
     }
     m_adc_evt_counter++;
-    nrf_gpio_pin_set(BATTERY_LOAD_SWITCH_CTRL_PIN); //LOAD SWITCH OFF
+    nrf_gpio_pin_clear(BATTERY_LOAD_SWITCH_CTRL_PIN); //LOAD SWITCH OFF
   }
 }
 
@@ -914,12 +915,12 @@ int main(void) {
 #if defined(SAADC_ENABLED) && SAADC_ENABLED == 1
   saadc_init();
 #endif
-
   // Start execution.
   application_timers_start();
   advertising_start();
   NRF_LOG_RAW_INFO(" BLE Advertising Start! \r\n");
   NRF_LOG_FLUSH();
+  nrf_gpio_pin_clear(BATTERY_LOAD_SWITCH_CTRL_PIN); // Disable Load Switch
 #if LEDS_ENABLE == 1
   nrf_gpio_pin_clear(LED_2); // Green
   nrf_gpio_pin_set(LED_1);   //Blue
