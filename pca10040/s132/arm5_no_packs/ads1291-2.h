@@ -77,7 +77,7 @@
 
 /* DEFAULT REGISTER VALUES ********************************************************/
 
-#define ADS1291_2_REGDEFAULT_CONFIG1 0x03   ///< Continuous conversion, data rate = 125->8kSPS
+#define ADS1291_2_REGDEFAULT_CONFIG1 0x01   ///< Continuous conversion, data rate = 125->8kSPS
 #define ADS1291_2_REGDEFAULT_CONFIG2 0xA0 //A3 for test signal @ 1Hz   ///< LOFF off, REFBUF on, VREF=2.42, CLK_EN=0, INT_TEST=1, TEST_FREQ @ 1Hz
 #define ADS1291_2_REGDEFAULT_LOFF 0x00      ///< 95%/5% LOFF comparator threshold, DC lead-off at 6 nA
 //0x65 == 1 Hz test signal

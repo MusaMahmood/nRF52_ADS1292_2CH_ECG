@@ -117,7 +117,7 @@ static uint16_t m_samples;
 
 #define APP_FEATURE_NOT_SUPPORTED BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2 /**< Reply when unsupported features are requested. */
 
-#define DEVICE_NAME "250Hz nRF52-ECG2"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "nRF52_ECG"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_500 "500Hz nRF52-ECG2" //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_1k "1k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_2k "2k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
@@ -422,7 +422,7 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt) {
 //#if defined(BOARD_EXG_V3)
 #if LEDS_ENABLE == 1
     nrf_gpio_pin_clear(LED_2); // Green
-//    nrf_gpio_pin_set(LED_1);   //Blue
+    nrf_gpio_pin_set(LED_1);   //Blue
 #endif
     break;
 
@@ -448,7 +448,7 @@ static void on_ble_evt(ble_evt_t *p_ble_evt) {
     ads1291_2_standby();
 #if LEDS_ENABLE == 1
     nrf_gpio_pin_clear(LED_2); // Blue
-//    nrf_gpio_pin_set(LED_1);   // Green
+    nrf_gpio_pin_set(LED_1);   // Green
 #endif
     advertising_start();
     break; // BLE_GAP_EVT_DISCONNECTED
@@ -459,7 +459,7 @@ static void on_ble_evt(ble_evt_t *p_ble_evt) {
     ads1291_2_wake();
 #if LEDS_ENABLE == 1
     nrf_gpio_pin_set(LED_2);
-//    nrf_gpio_pin_clear(LED_1);
+    nrf_gpio_pin_clear(LED_1);
 #endif
     NRF_LOG_INFO("Connected.\r\n");
     m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
@@ -783,9 +783,9 @@ static void ads1299_gpio_init(void) {
   nrf_gpio_pin_dir_set(ADS1291_2_PWDN_PIN, NRF_GPIO_PIN_DIR_OUTPUT);
 #endif
 #if defined(BOARD_2CH_ECG_RAT) && LEDS_ENABLE == 1
-//  nrf_gpio_cfg_output(LED_1);
+  nrf_gpio_cfg_output(LED_1);
   nrf_gpio_cfg_output(LED_2);
-//  nrf_gpio_pin_set(LED_1);
+  nrf_gpio_pin_set(LED_1);
   nrf_gpio_pin_set(LED_2);
 #endif
 #ifdef BATTERY_LOAD_SWITCH_CTRL_PIN
@@ -861,7 +861,7 @@ int main(void) {
   NRF_LOG_FLUSH();
 #if LEDS_ENABLE == 1
   nrf_gpio_pin_clear(LED_2); // Green
-//  nrf_gpio_pin_set(LED_1);   //Blue
+  nrf_gpio_pin_set(LED_1);   //Blue
 #endif
 #if defined(APP_TIMER_SAMPLING) && APP_TIMER_SAMPLING == 1
   m_samples = 0;
