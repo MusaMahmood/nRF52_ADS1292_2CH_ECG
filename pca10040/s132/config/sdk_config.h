@@ -5,14 +5,6 @@
 #include "app_config.h"
 #endif
 // <h> nRF_BLE 
-#ifndef FAST_SPI_ENABLED 
-#define FAST_SPI_ENABLED 0
-#endif
-
-#ifndef SPI_BLOCKING_MODE 
-#define SPI_BLOCKING_MODE 0
-#endif
-
 #ifndef LEDS_ENABLE
 #define LEDS_ENABLE 1
 #endif
@@ -2599,7 +2591,7 @@
 // <e> TWI_ENABLED - nrf_drv_twi - TWI/TWIM peripheral driver
 //==========================================================
 #ifndef TWI_ENABLED
-#define TWI_ENABLED 1
+#define TWI_ENABLED 0
 #endif
 #if  TWI_ENABLED
 // <o> TWI_DEFAULT_CONFIG_FREQUENCY  - Frequency

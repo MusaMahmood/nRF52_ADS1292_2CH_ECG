@@ -124,7 +124,7 @@ APP_TIMER_DEF(m_sampling_timer_id);
 static uint16_t m_samples;
 #endif
 
-#define EMG_DEVICE_CH 3
+#define EMG_DEVICE_CH 1
 
 #define APP_FEATURE_NOT_SUPPORTED BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2 /**< Reply when unsupported features are requested. */
 
