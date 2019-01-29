@@ -49,6 +49,7 @@
 // Characteristic UUIDs
 #define BLE_UUID_EEG_CH1_CHAR 0xEEF1
 #define BLE_UUID_EEG_CH2_CHAR 0xEEF2
+#define BLE_UUID_EEG_CH3_CHAR 0xEEF3
 
 #define EEG_PACKET_LENGTH 18
 
@@ -61,6 +62,7 @@ typedef struct
   uint16_t service_handle; /**< Handle of ble Service (as provided by the BLE stack). */
   ble_gatts_char_handles_t eeg_ch1_handles; /**< Handles related to the our body V measure characteristic. */
   ble_gatts_char_handles_t eeg_ch2_handles; /**< Handles related to the our body V measure characteristic. */
+  ble_gatts_char_handles_t eeg_ch3_handles; /**< Handles related to the our body V measure characteristic. */
   uint8_t eeg_ch1_buffer[EEG_PACKET_LENGTH]; //246 or 4* = 
   uint8_t eeg_ch2_buffer[EEG_PACKET_LENGTH]; //246 or 4* = 
   uint16_t eeg_ch1_count;
@@ -81,8 +83,9 @@ void ble_eeg_on_ble_evt(ble_eeg_t *p_eeg, ble_evt_t *p_ble_evt);
 *
 */
 
-void ble_eeg_update_1ch_v2(ble_eeg_t *p_eeg);
-void ble_eeg_update_2ch(ble_eeg_t *p_eeg);
+void ble_eeg_update_3ch_ch1(ble_eeg_t *p_eeg);
+void ble_eeg_update_3ch_ch2(ble_eeg_t *p_eeg);
+void ble_eeg_update_3ch_ch3(ble_eeg_t *p_eeg);
 
 
 

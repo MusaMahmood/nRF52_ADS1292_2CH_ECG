@@ -124,9 +124,11 @@ APP_TIMER_DEF(m_sampling_timer_id);
 static uint16_t m_samples;
 #endif
 
+#define EMG_DEVICE_CH 3
+
 #define APP_FEATURE_NOT_SUPPORTED BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2 /**< Reply when unsupported features are requested. */
 
-#define DEVICE_NAME "250Hz nRF52-ECG2"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "EMG_"STRINGIFY(EMG_DEVICE_CH) //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_500 "500Hz nRF52-ECG2" //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_1k "1k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_2k "2k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
@@ -827,10 +829,13 @@ void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action) {
 #endif
   if (m_eeg.eeg_ch1_count == EEG_PACKET_LENGTH) {
     m_eeg.eeg_ch1_count = 0;
-    if (ADS1291_2_REGDEFAULT_CH2SET != 0x81)
-      ble_eeg_update_2ch(&m_eeg);
-    else
-      ble_eeg_update_1ch_v2(&m_eeg);
+    #if (EMG_DEVICE_CH == 1)
+      ble_eeg_update_3ch_ch1(&m_eeg);
+    #elif (EMG_DEVICE_CH == 2)
+      ble_eeg_update_3ch_ch2(&m_eeg);
+    #elif (EMG_DEVICE_CH == 3)
+      ble_eeg_update_3ch_ch3(&m_eeg);
+    #endif 
   }
 }
 
