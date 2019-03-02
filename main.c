@@ -117,7 +117,7 @@ static uint16_t m_samples;
 
 #define APP_FEATURE_NOT_SUPPORTED BLE_GATT_STATUS_ATTERR_APP_BEGIN + 2 /**< Reply when unsupported features are requested. */
 
-#define DEVICE_NAME "nRF52_ECG"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME "nRF52_EMG"           //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_500 "500Hz nRF52-ECG2" //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_1k "1k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
 #define DEVICE_NAME_2k "2k nRF52-ECG2"   //"nRF52_EEG"         /**< Name of device. Will be included in the advertising data. */
